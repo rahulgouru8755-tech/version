@@ -31,20 +31,17 @@ jobs:
         run: |
           echo "=== Listing target directory ==="
           ls -la target/
-          
           echo "=== Checking for WAR files ==="
           if ls target/*.war 1> /dev/null 2>&1; then
             echo "Found WAR files:"
             ls -la target/*.war
             WAR_FILE=$(ls target/*.war | head -1)
             echo "WAR file: $WAR_FILE"
-            
             # Verify it's a file, not directory
             if [ -d "$WAR_FILE" ]; then
               echo "ERROR: $WAR_FILE is a directory, not a file!"
               exit 1
             fi
-            
             # Copy to a known location with correct name
             cp "$WAR_FILE" ./ROOT.war
             echo "WAR_FILE copied to ./ROOT.war"
@@ -67,7 +64,6 @@ jobs:
           echo "=== Cleaning up EC2 ==="
           ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} \
             "sudo rm -rf /tmp/ROOT.war; sudo touch /tmp/ROOT.war; sudo chmod 666 /tmp/ROOT.war"
-          
           echo "=== Uploading WAR file ==="
           scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no \
             ./ROOT.war ubuntu@${{ secrets.EC2_HOST }}:/tmp/ROOT.war
@@ -82,13 +78,11 @@ jobs:
           script: |
             echo "=== Checking /tmp directory ==="
             ls -la /tmp/
-            
             echo "=== Verifying ROOT.war file ==="
             if [ -f "/tmp/ROOT.war" ]; then
               echo "Found ROOT.war file in /tmp:"
               ls -la /tmp/ROOT.war
               file /tmp/ROOT.war
-              
               # Verify it's a regular file
               if [ ! -f "/tmp/ROOT.war" ]; then
                 echo "ERROR: /tmp/ROOT.war is not a regular file!"
@@ -110,14 +104,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "=== Starting Deployment ==="
-            
             echo "1. Stopping Tomcat..."
             sudo systemctl stop tomcat10 || true
-            
             echo "2. Cleaning up old deployment..."
             sudo rm -rf /var/lib/tomcat10/webapps/ROOT
             sudo rm -rf /var/lib/tomcat10/webapps/ROOT.war
-            
             echo "3. Verifying source WAR file exists..."
             if [ ! -f "/tmp/ROOT.war" ]; then
               echo "ERROR: /tmp/ROOT.war not found!"
@@ -128,38 +119,28 @@ jobs:
             echo "WAR file details:"
             ls -lh /tmp/ROOT.war
             file /tmp/ROOT.war
-            
             echo "4. Copying WAR to webapps directory..."
             sudo cp /tmp/ROOT.war /var/lib/tomcat10/webapps/
-            
             echo "5. Setting permissions..."
             sudo chown tomcat:tomcat /var/lib/tomcat10/webapps/ROOT.war
             sudo chmod 644 /var/lib/tomcat10/webapps/ROOT.war
-            
             echo "6. Verifying WAR file in webapps..."
             ls -lh /var/lib/tomcat10/webapps/
             file /var/lib/tomcat10/webapps/ROOT.war
-            
             echo "7. Creating ROOT directory..."
             sudo mkdir -p /var/lib/tomcat10/webapps/ROOT
             sudo chown tomcat:tomcat /var/lib/tomcat10/webapps/ROOT
             sudo chmod 755 /var/lib/tomcat10/webapps/ROOT
-            
             echo "8. Extracting WAR file..."
             sudo -u tomcat unzip -o /var/lib/tomcat10/webapps/ROOT.war -d /var/lib/tomcat10/webapps/ROOT/
-            
             echo "9. Setting permissions for extracted files..."
             sudo chown -R tomcat:tomcat /var/lib/tomcat10/webapps/ROOT/
             sudo chmod -R 755 /var/lib/tomcat10/webapps/ROOT/
-            
             echo "10. Starting Tomcat..."
             sudo systemctl start tomcat10
-            
             echo "11. Waiting for startup..."
             sleep 30
-            
             echo "12. Verifying deployment:"
             ls -la /var/lib/tomcat10/webapps/
             sudo systemctl status tomcat10 --no-pager
-            
             echo "=== Deployment Completed Successfully ==="
