@@ -41,20 +41,30 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "./${{ env.WAR_NAME }}"
           target: "${{ env.TEMP_PATH }}/${{ env.WAR_NAME }}"
-      - name: Verify file on EC2
+      - name: Verify file copied to EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "=== Verifying WAR file in ${{ env.TEMP_PATH }} ==="
-            if [ ! -f "${{ env.TEMP_PATH }}/${{ env.WAR_NAME }}" ]; then
-              echo "ERROR: WAR file not found on EC2!"
+            echo "=== Checking /tmp directory ==="
+            ls -la /tmp/
+            echo "=== Verifying ROOT.war file ==="
+            if [ -f "/tmp/ROOT.war" ]; then
+              echo "Found ROOT.war file in /tmp:"
+              ls -la /tmp/ROOT.war
+              file /tmp/ROOT.war
+              if [ ! -f "/tmp/ROOT.war" ]; then
+                echo "ERROR: /tmp/ROOT.war is not a regular file!"
+                exit 1
+              fi
+            else
+              echo "ERROR: /tmp/ROOT.war not found!"
+              echo "Contents of /tmp:"
+              ls -la /tmp/
               exit 1
             fi
-            ls -lh "${{ env.TEMP_PATH }}/${{ env.WAR_NAME }}"
-            file "${{ env.TEMP_PATH }}/${{ env.WAR_NAME }}"
       - name: Deploy WAR on Tomcat
         uses: appleboy/ssh-action@master
         with:
