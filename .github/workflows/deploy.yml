@@ -33,6 +33,16 @@ jobs:
           echo "Found WAR file: $WAR_FILE"
           cp "$WAR_FILE" "./${WAR_NAME}"
           ls -la "./${WAR_NAME}"
+      - name: Clean EC2 tmp directory before upload
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ubuntu
+            key: ${{ secrets.EC2_SSH_KEY }}
+            script: |
+              echo "Cleaning /tmp directory..."
+              sudo rm -f /tmp/ROOT.war
+              echo "Old WAR removed. Ready for new upload."
       - name: Upload WAR to EC2
         uses: appleboy/scp-action@master
         with:
