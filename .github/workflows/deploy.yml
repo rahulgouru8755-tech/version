@@ -37,10 +37,10 @@ jobs:
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ env.EC2_USER }}
+          username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "./${{ env.WAR_NAME }}"
-          target: "${{ env.TEMP_PATH }}/${{ env.WAR_NAME }}"
+          source: "./ROOT.war"
+          target: "/tmp/"
       - name: Verify file on EC2
         uses: appleboy/ssh-action@master
         with:
