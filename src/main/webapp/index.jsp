@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Student Management System rahul12</title>
+    <title>Welcome to Student Management System</title>
     <style>
         * {
             margin: 0;
